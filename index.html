@@ -1,577 +1,427 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบนับวัตถุดิบ (Raw Material Diff Calculator) - สาขาสนามกีฬาแห่งชาติ</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts Prompt -->
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        prompt: ['Prompt', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { font-family: 'Prompt', sans-serif; }
-        
-        /* Print Styles for A4 B&W PDF */
-        @media print {
-            @page {
-                size: A4 portrait;
-                margin: 8mm;
-            }
-            body {
-                background: white !important;
-                color: black !important;
-                font-size: 10pt;
-            }
-            .no-print {
-                display: none !important;
-            }
-            .print-only {
-                display: block !important;
-            }
-            .print-container {
-                width: 100% !important;
-                max-width: none !important;
-                box-shadow: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            table {
-                width: 100% !important;
-                border-collapse: collapse !important;
-                font-size: 9.5pt !important;
-            }
-            th, td {
-                border: 1px solid #000 !important;
-                padding: 4px 6px !important;
-                color: #000 !important;
-                background: transparent !important;
-            }
-            th {
-                background-color: #f0f0f0 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            input {
-                border: none !important;
-                background: transparent !important;
-                padding: 0 !important;
-                text-align: center !important;
-                font-weight: bold !important;
-            }
-        }
-
-        .print-only { display: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบนับวัตถุดิบ - สาขา สนามกีฬาแห่งชาติ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Sarabun', sans-serif; }
+    
+    /* สไตล์สำหรับการพิมพ์ PDF ขนาด A4 1 หน้า (ขาวดำ) */
+    @media print {
+      body {
+        background-color: #fff !important;
+        color: #000 !important;
+        font-size: 10pt;
+        margin: 0;
+        padding: 0;
+      }
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      @page {
+        size: A4 portrait;
+        margin: 8mm 10mm;
+      }
+      .print-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 8px !important;
+      }
+      th, td {
+        border: 1px solid #000 !important;
+        padding: 3px 5px !important;
+        font-size: 9pt !important;
+        color: #000 !important;
+        text-align: center;
+      }
+      th {
+        background-color: #f0f0f0 !important;
+        font-weight: bold;
+      }
+      .text-left-print { text-align: left !important; }
+      .diff-negative { font-weight: bold; text-decoration: underline; }
+    }
+  </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen">
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-12">
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed top-4 right-4 z-50 transform transition-all duration-300 translate-y-[-100px] opacity-0 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 pointer-events-none">
-        <i class="fa-solid fa-circle-check text-green-400 text-lg"></i>
-        <span id="toast-msg" class="text-sm font-medium">คัดลอกข้อความแล้ว</span>
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-4 right-4 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center space-x-2">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="toast-msg">คัดลอกรหัสเรียบร้อย</span>
+  </div>
+
+  <!-- Main Container -->
+  <div class="max-w-6xl mx-auto px-3 py-4 sm:px-6 sm:py-6 print-container">
+    
+    <!-- Top Bar / Header -->
+    <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4 border border-slate-200">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded-full no-print">Raw Material System</span>
+            <span class="text-xs text-slate-500 font-medium">สาขา สนามกีฬาแห่งชาติ</span>
+          </div>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">รายงานการตรวจนับวัตถุดิบและค่า Diff</h1>
+          <p class="text-xs sm:text-sm text-slate-500 print-only">สาขา: สนามกีฬาแห่งชาติ | วันที่ตรวจนับ: <span id="print-date-display"></span></p>
+        </div>
+
+        <!-- Action Controls -->
+        <div class="flex flex-wrap items-center gap-2 no-print">
+          <div>
+            <label class="block text-xs text-slate-500 mb-1">วันที่ตรวจนับ</label>
+            <input type="date" id="auditDate" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+          </div>
+          <div class="flex items-end gap-2 mt-auto">
+            <button onclick="openHistoryModal()" class="bg-slate-800 hover:bg-slate-900 text-white px-3.5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-clock-rotate-left"></i> ประวัติ
+            </button>
+            <button onclick="exportPDF()" class="bg-amber-600 hover:bg-amber-700 text-white px-3.5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-file-pdf"></i> พิมพ์ / PDF A4
+            </button>
+            <button onclick="saveData()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-floppy-disk"></i> บันทึก
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Header Navigation -->
-    <header class="no-print bg-slate-900 text-white shadow-md sticky top-0 z-40">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
-            <div class="flex items-center space-x-3">
-                <div class="bg-amber-500 p-2 rounded-lg text-slate-900 font-bold">
-                    <i class="fa-solid fa-boxes-stacked text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-lg leading-tight">RawMat Diff Calculator</h1>
-                    <p class="text-xs text-amber-400 font-light">สาขา: สนามกีฬาแห่งชาติ</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-2">
-                <button onclick="switchTab('calculator')" id="btn-tab-calc" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-500 text-slate-900 transition">
-                    <i class="fa-solid fa-calculator mr-1"></i> คำนวณ
-                </button>
-                <button onclick="switchTab('history')" id="btn-tab-hist" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
-                    <i class="fa-solid fa-clock-rotate-left mr-1"></i> ประวัติ
-                </button>
-                <button onclick="openSettings()" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition" title="ตั้งค่าเชื่อมต่อ Google Sheet">
-                    <i class="fa-solid fa-gear"></i>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="max-w-6xl mx-auto p-3 sm:p-6 print-container">
-
-        <!-- A4 Header View for Print PDF -->
-        <div class="print-only mb-4 border-b-2 border-black pb-2">
-            <div class="flex justify-between items-end">
-                <div>
-                    <h1 class="text-xl font-bold text-black uppercase">รายงานการนับสต็อกวัตถุดิบและค่า Diff</h1>
-                    <h2 class="text-base font-semibold text-black">สาขา: สนามกีฬาแห่งชาติ</h2>
-                </div>
-                <div class="text-right text-xs">
-                    <p><strong>วันที่บันทึก:</strong> <span id="print-date">-</span></p>
-                    <p><strong>ผู้บันทึก:</strong> <span id="print-inspector">-</span></p>
-                    <p><strong>เวลาพิมพ์เอกสาร:</strong> <span id="print-timestamp">-</span></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 1: CALCULATOR -->
-        <div id="tab-calculator" class="space-y-4">
-            
-            <!-- Controls Header -->
-            <div class="no-print bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 justify-between items-md-center">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">วันที่นับสต็อก</label>
-                        <input type="date" id="doc-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">ผู้ทำรายการ / พนักงาน</label>
-                        <input type="text" id="inspector-name" placeholder="กรอกชื่อพนักงาน" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <div class="flex items-end gap-2">
-                    <button onclick="saveData()" class="flex-1 sm:flex-none px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold shadow-sm transition flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-floppy-disk"></i>
-                        <span>บันทึกข้อมูล</span>
-                    </button>
-                    <button onclick="exportPDF()" class="flex-1 sm:flex-none px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-semibold shadow-sm transition flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-file-pdf text-red-400"></i>
-                        <span>พิมพ์ PDF (A4)</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Table Container -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
-                        <thead>
-                            <tr class="bg-slate-800 text-slate-200 font-semibold border-b border-slate-700">
-                                <th class="py-3 px-2 sm:px-3 text-center w-8">#</th>
-                                <th class="py-3 px-2 sm:px-3">บาร์โค้ด</th>
-                                <th class="py-3 px-2 sm:px-3">รายการวัตถุดิบ</th>
-                                <th class="py-3 px-2 sm:px-3 text-center">ขนาด/ถุง</th>
-                                <th class="py-3 px-2 sm:px-3 text-center w-20 sm:w-24">นับถุงจริง</th>
-                                <th class="py-3 px-2 sm:px-3 text-center w-20 sm:w-24">เศษจริง(g)</th>
-                                <th class="py-3 px-2 sm:px-3 text-right">รวมจริง(g)</th>
-                                <th class="py-3 px-2 sm:px-3 text-center w-24 sm:w-28">ค่า OH (g)</th>
-                                <th class="py-3 px-2 sm:px-3 text-right">ค่า Diff (g)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="material-tbody" class="divide-y divide-slate-100">
-                            <!-- Items generated dynamically -->
-                        </tbody>
-                        <tfoot>
-                            <tr class="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
-                                <td colspan="3" class="py-3 px-3 text-right">รวมทั้งหมด:</td>
-                                <td id="total-pack" class="py-3 px-2 text-center">-</td>
-                                <td id="total-bags" class="py-3 px-2 text-center">0</td>
-                                <td id="total-remnant" class="py-3 px-2 text-center">0</td>
-                                <td id="total-actual" class="py-3 px-3 text-right text-blue-700">0</td>
-                                <td id="total-oh" class="py-3 px-2 text-center">0</td>
-                                <td id="total-diff" class="py-3 px-3 text-right">0</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Mobile Tip -->
-            <div class="no-print bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-start space-x-2">
-                <i class="fa-solid fa-lightbulb text-amber-600 mt-0.5 text-sm"></i>
-                <div>
-                    <strong>คำแนะนำ:</strong> กดปุ่ม <i class="fa-regular fa-copy"></i> ด้านหลังรหัสบาร์โค้ดเพื่อคัดลอกรหัสสินค้าไปวางในระบบบริษัทเพื่อดึงค่า OH มาใส่ได้ทันที!
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: HISTORY -->
-        <div id="tab-history" class="hidden space-y-4">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-3 justify-between items-center">
-                <div class="flex items-center space-x-3 w-full sm:w-auto">
-                    <i class="fa-solid fa-filter text-slate-400"></i>
-                    <select id="filter-month" onchange="loadHistory()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
-                    </select>
-                    <select id="filter-year" onchange="loadHistory()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
-                    </select>
-                </div>
-                <button onclick="loadHistory()" class="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-medium transition">
-                    <i class="fa-solid fa-rotate mr-1"></i> โหลดข้อมูลใหม่
-                </button>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-4 border-b border-slate-100 font-semibold text-slate-700 flex justify-between items-center">
-                    <span>ประวัติรายการบันทึก</span>
-                    <span id="history-count" class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">0 รายการ</span>
-                </div>
-                <div id="history-list" class="divide-y divide-slate-100">
-                    <div class="p-8 text-center text-slate-400">
-                        <i class="fa-solid fa-box-open text-4xl mb-2"></i>
-                        <p>ยังไม่มีข้อมูลบันทึกย้อนหลัง</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal Settings -->
-    <div id="modal-settings" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-slate-800 text-lg"><i class="fa-solid fa-database text-amber-500 mr-2"></i>ตั้งค่า Google Sheets API</h3>
-                <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <p class="text-xs text-slate-500 leading-relaxed">
-                นำ Web App URL จากการเลย์เอาต์ Google Apps Script มาวางเพื่อเชื่อมต่อและบันทึกฐานข้อมูลลงใน Google Sheets
-            </p>
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Google Apps Script Web App URL</label>
-                <input type="url" id="gas-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-            </div>
-            <div class="flex justify-end space-x-2 pt-2">
-                <button onclick="closeSettings()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-300 transition">ยกเลิก</button>
-                <button onclick="saveSettings()" class="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl text-sm font-semibold hover:bg-amber-600 transition">บันทึกตั้งค่า</button>
-            </div>
-        </div>
+    <!-- Raw Material Form Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-800 text-white text-xs sm:text-sm">
+              <th class="py-3 px-3 text-center w-12">ลำดับ</th>
+              <th class="py-3 px-3 text-center w-28">บาร์โค้ด</th>
+              <th class="py-3 px-3 min-w-[200px] text-left-print">ชื่อวัตถุดิบ</th>
+              <th class="py-3 px-3 text-center w-20">นับถุงจริง</th>
+              <th class="py-3 px-3 text-center w-20">เศษจริง</th>
+              <th class="py-3 px-3 text-center w-24 bg-slate-700">ค่ารวมจริง</th>
+              <th class="py-3 px-3 text-center w-24">OH</th>
+              <th class="py-3 px-3 text-center w-24 bg-slate-700">Diff</th>
+            </tr>
+          </thead>
+          <tbody id="materialTableBody" class="divide-y divide-slate-200 text-xs sm:text-sm">
+            <!-- Dynamic Content Generated via JS -->
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
 
-    <!-- Application JavaScript Logic -->
-    <script>
-        // Web App URL จาก Google Apps Script
-        const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbzn3PATy45HI7IzscPQoWkMuoExC3AYf1RVKH7yBvXqNk-q8vrZI5nc_IpP8f8IhA1D/exec";
+  <!-- History Modal -->
+  <div id="historyModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-4 sm:p-5 border-b border-slate-200 flex justify-between items-center bg-slate-900 text-white">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+          <i class="fa-solid fa-box-archive"></i> ประวัติการตรวจนับย้อนหลัง
+        </h3>
+        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+      
+      <!-- Filter Controls -->
+      <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-3 items-center">
+        <div>
+          <label class="text-xs text-slate-500 block mb-1">เลือกเดือน / ปี</label>
+          <input type="month" id="historyMonthFilter" onchange="filterHistory()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <button onclick="loadHistoryData()" class="mt-auto bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium transition">
+          <i class="fa-solid fa-arrows-rotate"></i> รีเฟรช
+        </button>
+      </div>
 
-        const MATERIALS = [
-            { id: 1, sku: "20000687", name: "คอฟฟี่เวิร์คส์ คาเฟ่ซาโบรโซ่", packSize: 500 },
-            { id: 2, sku: "20000505", name: "คอฟฟี่เวิร์คส์ มัชฉะ กรีนที", packSize: 500 },
-            { id: 3, sku: "20001087", name: "เอ็กซ์ตราบรูธ ผงโกโก้", packSize: 1000 },
-            { id: 4, sku: "20000514", name: "ชาเอิร์ลเกรย์", packSize: 100 },
-            { id: 5, sku: "20000534", name: "ชาเขียวมะลิ", packSize: 500 },
-            { id: 6, sku: "20000808", name: "ชาผงปรุงสำเร็จ ชาตรามือ", packSize: 400 },
-            { id: 7, sku: "20000517", name: "ผงครีม", packSize: 1000 },
-            { id: 8, sku: "20000945", name: "คาเนชั่นนมข้นหวาน", packSize: 388 },
-            { id: 9, sku: "20000944", name: "คาเนชั่นนมข้นจืด", packSize: 405 },
-            { id: 10, sku: "20000619", name: "ส้มสไลด์เชื่อมอบแห้ง", packSize: 1000 },
-            { id: 11, sku: "20000527", name: "ผงพุดดิ้งนม", packSize: 1000 },
-            { id: 12, sku: "20000864", name: "ทรอปิก้า คิง มะพร้าวน้ำหอมพร้อมปั่น", packSize: 185 },
-            { id: 13, sku: "20000537", name: "เมจินมสดรสจืด 2 ลิตร สำหรับชงกาแฟ-ชา", packSize: 2000 },
-            { id: 14, sku: "20000525", name: "ไข่มุกดำ", packSize: 1000 },
-            { id: 15, sku: "20000516", name: "น้ำเชื่อม", packSize: 5000 },
-            { id: 16, sku: "20001393", name: "คอฟฟี่เวิร์คส์ ผงนิชิโอะมัชฉะ", packSize: 1000 }
-        ];
+      <!-- History List Container -->
+      <div id="historyList" class="p-4 overflow-y-auto space-y-3 flex-1">
+        <p class="text-center text-slate-400 py-8">กำลังโหลดข้อมูลประวัติ...</p>
+      </div>
+    </div>
+  </div>
 
-        let currentRecordId = null;
+  <script>
+    // ----------------------------------------------------
+    // URL ของ Google Apps Script Web App
+    // ----------------------------------------------------
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1jFjyf7aQzY7E8Z88JXZwDvjfaCTaVBQlzYweJDpNfnAxJD6tL3GD_aJC5fqXWxpZ/exec";
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('doc-date').value = new Date().toISOString().split('T')[0];
-            
-            // ใช้ค่า URL เริ่มต้นที่ตั้งไว้
-            const savedUrl = localStorage.getItem('rawmat_gas_url') || DEFAULT_GAS_URL;
-            document.getElementById('gas-url').value = savedUrl;
+    // รายการวัตถุดิบทั้ง 16 รายการ
+    const RAW_MATERIALS = [
+      { code: '20000687', name: 'คอฟฟี่เวิร์คส์ คาเฟ่ซาโบรโซ่ 500g' },
+      { code: '20000505', name: 'คอฟฟี่เวิร์คส์ มัชฉะ กรีนที 500g' },
+      { code: '20001087', name: 'เอ็กซ์ตราบรูธ ผงโกโก้ 1000g' },
+      { code: '20000514', name: 'ชาเอิร์ลเกรย์ 100g' },
+      { code: '20000534', name: 'ชาเขียวมะลิ 500g' },
+      { code: '20000808', name: 'ชาผงปรุงสำเร็จ ชาตรามือ 400g' },
+      { code: '20000517', name: 'ผงครีม 1000g' },
+      { code: '20000945', name: 'คาเนชั่นนมข้นหวาน 388g' },
+      { code: '20000944', name: 'คาเนชั่นนมข้นจืด 405g' },
+      { code: '20000619', name: 'ส้มสไลด์เชื่อมอบแห้ง 1000g' },
+      { code: '20000527', name: 'ผงพุดดิ้งนม 1000g' },
+      { code: '20000864', name: 'ทรอปิก้า คิง มะพร้าวน้ำหอมพร้อมปั่น 185g' },
+      { code: '20000537', name: 'เมจินมสดรสจืด 2 ลิตร สำหรับชงกาแฟ-ชา 2000g' },
+      { code: '20000525', name: 'ไข่มุกดำ 1000g' },
+      { code: '20000516', name: 'น้ำเชื่อม 5000g' },
+      { code: '20001393', name: 'คอฟฟี่เวิร์คส์ ผงนิชิโอะมัชฉะ 1000g' }
+    ];
 
-            renderTable();
-            initHistoryFilters();
+    let currentEditingRecordId = null;
+    let historyRawData = [];
+
+    // Initialize Page
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('auditDate').valueAsDate = new Date();
+      renderTable();
+    });
+
+    // Render Raw Material Table
+    function renderTable() {
+      const tbody = document.getElementById('materialTableBody');
+      tbody.innerHTML = '';
+
+      RAW_MATERIALS.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-center font-medium text-slate-400">${index + 1}</td>
+          <td class="py-2 px-3 text-center">
+            <div class="flex items-center justify-center gap-1">
+              <span class="font-mono font-semibold text-slate-700">${item.code}</span>
+              <button onclick="copyBarcode('${item.code}')" class="no-print text-slate-400 hover:text-emerald-600 p-1" title="คัดลอกรหัส">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+          </td>
+          <td class="py-2 px-3 font-medium text-slate-800 text-left-print">${item.name}</td>
+          <td class="py-2 px-2 text-center">
+            <input type="number" step="any" id="full_${item.code}" value="" oninput="calculateDiff('${item.code}')"
+              class="w-full text-center border border-slate-300 rounded px-1.5 py-1 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+          </td>
+          <td class="py-2 px-2 text-center">
+            <input type="number" step="any" id="frac_${item.code}" value="" oninput="calculateDiff('${item.code}')"
+              class="w-full text-center border border-slate-300 rounded px-1.5 py-1 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+          </td>
+          <td class="py-2 px-3 text-center font-bold text-slate-900 bg-slate-100/70" id="total_${item.code}">0</td>
+          <td class="py-2 px-2 text-center">
+            <input type="number" step="any" id="oh_${item.code}" value="" oninput="calculateDiff('${item.code}')"
+              class="w-full text-center border border-slate-300 rounded px-1.5 py-1 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+          </td>
+          <td class="py-2 px-3 text-center font-bold bg-slate-100/70" id="diff_${item.code}">0</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // คำนวณค่ารวมจริง และ ค่า Diff
+    function calculateDiff(code) {
+      const full = parseFloat(document.getElementById(`full_${code}`).value) || 0;
+      const frac = parseFloat(document.getElementById(`frac_${code}`).value) || 0;
+      const oh = parseFloat(document.getElementById(`oh_${code}`).value) || 0;
+
+      const totalActual = full + frac;
+      const diff = totalActual - oh;
+
+      // แสดงผลค่ารวมจริง
+      document.getElementById(`total_${code}`).innerText = Number.isInteger(totalActual) ? totalActual : totalActual.toFixed(2);
+
+      // แสดงผล Diff
+      const diffEl = document.getElementById(`diff_${code}`);
+      const formattedDiff = Number.isInteger(diff) ? diff : diff.toFixed(2);
+      diffEl.innerText = formattedDiff;
+
+      // เปลี่ยนสีข้อความกรณีมีค่า Diff
+      if (diff < 0) {
+        diffEl.className = "py-2 px-3 text-center font-bold bg-slate-100/70 text-rose-600 diff-negative";
+      } else if (diff > 0) {
+        diffEl.className = "py-2 px-3 text-center font-bold bg-slate-100/70 text-amber-600";
+      } else {
+        diffEl.className = "py-2 px-3 text-center font-bold bg-slate-100/70 text-emerald-600";
+      }
+    }
+
+    // คัดลอกรหัสบาร์โค้ด
+    function copyBarcode(code) {
+      navigator.clipboard.writeText(code).then(() => {
+        showToast(`คัดลอกรหัส ${code} เรียบร้อยแล้ว`);
+      });
+    }
+
+    // แสดงแจ้งเตือน
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // พิมพ์เอกสาร PDF A4
+    function exportPDF() {
+      const dateVal = document.getElementById('auditDate').value;
+      document.getElementById('print-date-display').innerText = dateVal || 'ไม่ระบุ';
+      window.print();
+    }
+
+    // บันทึกข้อมูลไปยัง Google Sheets
+    async function saveData() {
+      const auditDate = document.getElementById('auditDate').value;
+      if (!auditDate) {
+        alert('กรุณาเลือกวันที่ตรวจนับ');
+        return;
+      }
+
+      const yearMonth = auditDate.substring(0, 7); // YYYY-MM
+      const itemsPayload = RAW_MATERIALS.map(item => {
+        const full = parseFloat(document.getElementById(`full_${item.code}`).value) || 0;
+        const frac = parseFloat(document.getElementById(`frac_${item.code}`).value) || 0;
+        const oh = parseFloat(document.getElementById(`oh_${item.code}`).value) || 0;
+        const totalActual = full + frac;
+        const diff = totalActual - oh;
+
+        return {
+          code: item.code,
+          name: item.name,
+          fullCount: full,
+          fractionCount: frac,
+          totalActual: totalActual,
+          oh: oh,
+          diff: diff
+        };
+      });
+
+      const payload = {
+        action: currentEditingRecordId ? 'update' : 'save',
+        recordId: currentEditingRecordId,
+        auditDate: auditDate,
+        yearMonth: yearMonth,
+        items: itemsPayload
+      };
+
+      try {
+        showToast('กำลังบันทึกข้อมูลไปยัง Google Sheets...');
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
         });
-
-        function renderTable() {
-            const tbody = document.getElementById('material-tbody');
-            tbody.innerHTML = '';
-
-            MATERIALS.forEach((item, index) => {
-                const tr = document.createElement('tr');
-                tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50';
-                tr.innerHTML = `
-                    <td class="py-2 px-2 sm:px-3 text-center font-semibold text-slate-400">${index + 1}</td>
-                    <td class="py-2 px-2 sm:px-3 font-mono text-slate-700">
-                        <div class="flex items-center space-x-1">
-                            <span>${item.sku}</span>
-                            <button type="button" onclick="copyToClipboard('${item.sku}')" title="คัดลอกบาร์โค้ด" class="no-print p-1 text-slate-400 hover:text-amber-600 transition">
-                                <i class="fa-regular fa-copy"></i>
-                            </button>
-                        </div>
-                    </td>
-                    <td class="py-2 px-2 sm:px-3 font-medium text-slate-800">${item.name}</td>
-                    <td class="py-2 px-2 sm:px-3 text-center text-slate-500">${item.packSize}g</td>
-                    <td class="py-2 px-1 sm:px-2">
-                        <input type="number" min="0" id="bags-${item.id}" oninput="calculateRow(${item.id})" placeholder="0" class="w-full text-center bg-slate-100 border border-slate-200 rounded py-1 text-slate-800 font-semibold focus:bg-white focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                    </td>
-                    <td class="py-2 px-1 sm:px-2">
-                        <input type="number" min="0" step="any" id="remnant-${item.id}" oninput="calculateRow(${item.id})" placeholder="0" class="w-full text-center bg-slate-100 border border-slate-200 rounded py-1 text-slate-800 font-semibold focus:bg-white focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                    </td>
-                    <td class="py-2 px-2 sm:px-3 text-right font-bold text-blue-600" id="actual-${item.id}">0</td>
-                    <td class="py-2 px-1 sm:px-2">
-                        <input type="number" min="0" step="any" id="oh-${item.id}" oninput="calculateRow(${item.id})" placeholder="0" class="w-full text-center bg-amber-50/50 border border-amber-200 rounded py-1 text-amber-900 font-semibold focus:bg-white focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                    </td>
-                    <td class="py-2 px-2 sm:px-3 text-right font-bold" id="diff-${item.id}">0</td>
-                `;
-                tbody.appendChild(tr);
-            });
-            calculateTotals();
+        const res = await response.json();
+        if (res.status === 'success') {
+          showToast('บันทึกข้อมูลสำเร็จเรียบร้อย!');
+          currentEditingRecordId = null;
+        } else {
+          alert('เกิดข้อผิดพลาดในการบันทึก: ' + res.message);
         }
+      } catch (err) {
+        console.error(err);
+        alert('ไม่สามารถเชื่อมต่อระบบบันทึกได้ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตหรือ URL ของ Apps Script');
+      }
+    }
 
-        function calculateRow(id) {
-            const item = MATERIALS.find(m => m.id === id);
-            const bags = parseFloat(document.getElementById(`bags-${id}`).value) || 0;
-            const remnant = parseFloat(document.getElementById(`remnant-${id}`).value) || 0;
-            const oh = parseFloat(document.getElementById(`oh-${id}`).value) || 0;
+    // Modal ประวัติย้อนหลัง
+    function openHistoryModal() {
+      document.getElementById('historyModal').classList.remove('hidden');
+      loadHistoryData();
+    }
 
-            const actual = (bags * item.packSize) + remnant;
-            const diff = actual - oh;
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.add('hidden');
+    }
 
-            document.getElementById(`actual-${id}`).innerText = actual.toLocaleString('th-TH');
-            
-            const diffElem = document.getElementById(`diff-${id}`);
-            diffElem.innerText = diff.toLocaleString('th-TH');
+    // ดึงข้อมูลประวัติย้อนหลัง
+    async function loadHistoryData() {
+      const listEl = document.getElementById('historyList');
+      listEl.innerHTML = '<p class="text-center text-slate-400 py-8"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูลประวัติ...</p>';
 
-            if (diff < 0) {
-                diffElem.className = "py-2 px-2 sm:px-3 text-right font-bold text-red-600";
-            } else if (diff > 0) {
-                diffElem.className = "py-2 px-2 sm:px-3 text-right font-bold text-green-600";
-            } else {
-                diffElem.className = "py-2 px-2 sm:px-3 text-right font-bold text-slate-700";
-            }
+      try {
+        const res = await fetch(SCRIPT_URL);
+        const data = await res.json();
+        historyRawData = data;
+        filterHistory();
+      } catch (err) {
+        listEl.innerHTML = '<p class="text-center text-rose-500 py-8">เกิดข้อผิดพลาดในการโหลดประวัติ</p>';
+      }
+    }
 
-            calculateTotals();
+    // จัดกลุ่มประวัติย้อนหลังตามเดือน/ปี และวันที่
+    function filterHistory() {
+      const listEl = document.getElementById('historyList');
+      const selectedMonth = document.getElementById('historyMonthFilter').value; // YYYY-MM
+
+      let filtered = historyRawData;
+      if (selectedMonth) {
+        filtered = historyRawData.filter(row => row.YearMonth === selectedMonth);
+      }
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<p class="text-center text-slate-400 py-8">ไม่พบประวัติการตรวจนับในช่วงเวลาที่เลือก</p>';
+        return;
+      }
+
+      // Group by RecordID
+      const grouped = {};
+      filtered.forEach(row => {
+        if (!grouped[row.RecordID]) {
+          grouped[row.RecordID] = {
+            recordId: row.RecordID,
+            auditDate: row.AuditDate,
+            timestamp: row.Timestamp,
+            yearMonth: row.YearMonth,
+            items: []
+          };
         }
+        grouped[row.RecordID].items.push(row);
+      });
 
-        function calculateTotals() {
-            let totalBags = 0, totalRemnant = 0, totalActual = 0, totalOH = 0, totalDiff = 0;
+      listEl.innerHTML = '';
+      Object.values(grouped).forEach(rec => {
+        const card = document.createElement('div');
+        card.className = 'border border-slate-200 rounded-xl p-4 hover:border-emerald-500 transition bg-white shadow-sm flex justify-between items-center';
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-800 text-sm">วันที่บันทึก: ${rec.auditDate}</span>
+              <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">${rec.yearMonth}</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">เวลาบันทึก: ${rec.timestamp} | จำนวน ${rec.items.length} รายการ</p>
+          </div>
+          <button onclick="loadRecordToForm('${rec.recordId}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
+            <i class="fa-solid fa-pen-to-square"></i> โหลดมาแก้ไข
+          </button>
+        `;
+        listEl.appendChild(card);
+      });
+    }
 
-            MATERIALS.forEach(item => {
-                const bags = parseFloat(document.getElementById(`bags-${item.id}`).value) || 0;
-                const remnant = parseFloat(document.getElementById(`remnant-${item.id}`).value) || 0;
-                const oh = parseFloat(document.getElementById(`oh-${item.id}`).value) || 0;
-                const actual = (bags * item.packSize) + remnant;
-                const diff = actual - oh;
+    // ดึงรายการประวัติที่เลือกกลับมาแก้ไขในฟอร์ม
+    function loadRecordToForm(recordId) {
+      const items = historyRawData.filter(row => row.RecordID === recordId);
+      if (items.length === 0) return;
 
-                totalBags += bags;
-                totalRemnant += remnant;
-                totalActual += actual;
-                totalOH += oh;
-                totalDiff += diff;
-            });
+      currentEditingRecordId = recordId;
+      document.getElementById('auditDate').value = items[0].AuditDate;
 
-            document.getElementById('total-bags').innerText = totalBags.toLocaleString('th-TH');
-            document.getElementById('total-remnant').innerText = totalRemnant.toLocaleString('th-TH');
-            document.getElementById('total-actual').innerText = totalActual.toLocaleString('th-TH');
-            document.getElementById('total-oh').innerText = totalOH.toLocaleString('th-TH');
-
-            const diffElem = document.getElementById('total-diff');
-            diffElem.innerText = totalDiff.toLocaleString('th-TH');
-
-            if (totalDiff < 0) {
-                diffElem.className = "py-3 px-3 text-right font-bold text-red-600";
-            } else if (totalDiff > 0) {
-                diffElem.className = "py-3 px-3 text-right font-bold text-green-600";
-            } else {
-                diffElem.className = "py-3 px-3 text-right font-bold text-slate-900";
-            }
+      items.forEach(item => {
+        const code = item.ItemCode;
+        if (document.getElementById(`full_${code}`)) {
+          document.getElementById(`full_${code}`).value = item.FullCount;
+          document.getElementById(`frac_${code}`).value = item.FractionCount;
+          document.getElementById(`oh_${code}`).value = item.OH;
+          calculateDiff(code);
         }
+      });
 
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showToast(`คัดลอกบาร์โค้ด ${text} เรียบร้อยแล้ว`);
-            }).catch(err => showToast(`ไม่สามารถคัดลอกได้: ${err}`));
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
-            setTimeout(() => toast.classList.add('translate-y-[-100px]', 'opacity-0'), 2500);
-        }
-
-        function switchTab(tab) {
-            const calcTab = document.getElementById('tab-calculator');
-            const histTab = document.getElementById('tab-history');
-            const btnCalc = document.getElementById('btn-tab-calc');
-            const btnHist = document.getElementById('btn-tab-hist');
-
-            if (tab === 'calculator') {
-                calcTab.classList.remove('hidden');
-                histTab.classList.add('hidden');
-                btnCalc.className = "px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-500 text-slate-900 transition";
-                btnHist.className = "px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition";
-            } else {
-                calcTab.classList.add('hidden');
-                histTab.classList.remove('hidden');
-                btnHist.className = "px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-500 text-slate-900 transition";
-                btnCalc.className = "px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 transition";
-                loadHistory();
-            }
-        }
-
-        function openSettings() { document.getElementById('modal-settings').classList.remove('hidden'); }
-        function closeSettings() { document.getElementById('modal-settings').classList.add('hidden'); }
-        function saveSettings() {
-            const url = document.getElementById('gas-url').value.trim();
-            localStorage.setItem('rawmat_gas_url', url);
-            closeSettings();
-            showToast('บันทึก Web App URL แล้ว');
-        }
-
-        async function saveData() {
-            const date = document.getElementById('doc-date').value;
-            const inspector = document.getElementById('inspector-name').value.trim();
-
-            if (!date) {
-                alert('กรุณาเลือกวันที่ทำรายการ');
-                return;
-            }
-
-            const itemsData = MATERIALS.map(item => {
-                const bags = parseFloat(document.getElementById(`bags-${item.id}`).value) || 0;
-                const remnant = parseFloat(document.getElementById(`remnant-${item.id}`).value) || 0;
-                const oh = parseFloat(document.getElementById(`oh-${item.id}`).value) || 0;
-                const actual = (bags * item.packSize) + remnant;
-                const diff = actual - oh;
-
-                return { id: item.id, sku: item.sku, name: item.name, packSize: item.packSize, bags, remnant, actual, oh, diff };
-            });
-
-            const payload = {
-                id: currentRecordId || 'REC_' + Date.now(),
-                branch: 'สาขาสนามกีฬาแห่งชาติ',
-                date: date,
-                inspector: inspector || 'ไม่ระบุชื่อ',
-                timestamp: new Date().toLocaleString('th-TH'),
-                items: itemsData
-            };
-
-            let localData = JSON.parse(localStorage.getItem('rawmat_records') || '[]');
-            const existingIdx = localData.findIndex(r => r.id === payload.id);
-            if (existingIdx >= 0) localData[existingIdx] = payload;
-            else localData.unshift(payload);
-            localStorage.setItem('rawmat_records', JSON.stringify(localData));
-
-            const gasUrl = localStorage.getItem('rawmat_gas_url') || DEFAULT_GAS_URL;
-            if (gasUrl) {
-                try {
-                    showToast('กำลังบันทึกลง Google Sheet...');
-                    await fetch(gasUrl, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    showToast('บันทึกข้อมูลสำเร็จ!');
-                } catch (e) {
-                    showToast('บันทึกในเครื่องแล้ว (Google Sheet ล้มเหลว)');
-                }
-            } else {
-                showToast('บันทึกข้อมูลในเครื่องเรียบร้อยแล้ว');
-            }
-            currentRecordId = payload.id;
-        }
-
-        function exportPDF() {
-            document.getElementById('print-date').innerText = document.getElementById('doc-date').value;
-            document.getElementById('print-inspector').innerText = document.getElementById('inspector-name').value || 'ไม่ระบุชื่อ';
-            document.getElementById('print-timestamp').innerText = new Date().toLocaleString('th-TH');
-            window.print();
-        }
-
-        function initHistoryFilters() {
-            const mSelect = document.getElementById('filter-month');
-            const ySelect = document.getElementById('filter-year');
-            const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-            mSelect.innerHTML = months.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
-
-            const now = new Date();
-            mSelect.value = now.getMonth() + 1;
-
-            const currentYear = now.getFullYear();
-            let yHtml = '';
-            for (let y = currentYear; y >= currentYear - 3; y--) {
-                yHtml += `<option value="${y}">${y + 543} (${y})</option>`;
-            }
-            ySelect.innerHTML = yHtml;
-        }
-
-        function loadHistory() {
-            const selectedMonth = parseInt(document.getElementById('filter-month').value);
-            const selectedYear = parseInt(document.getElementById('filter-year').value);
-            let records = JSON.parse(localStorage.getItem('rawmat_records') || '[]');
-
-            const filtered = records.filter(r => {
-                if (!r.date) return false;
-                const d = new Date(r.date);
-                return (d.getMonth() + 1) === selectedMonth && d.getFullYear() === selectedYear;
-            });
-
-            const listElem = document.getElementById('history-list');
-            document.getElementById('history-count').innerText = `${filtered.length} รายการ`;
-
-            if (filtered.length === 0) {
-                listElem.innerHTML = `
-                    <div class="p-8 text-center text-slate-400">
-                        <i class="fa-solid fa-box-open text-4xl mb-2"></i>
-                        <p>ไม่พบข้อมูลในเดือน/ปี ที่เลือก</p>
-                    </div>
-                `;
-                return;
-            }
-
-            listElem.innerHTML = filtered.map(r => `
-                <div class="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 hover:bg-slate-50 transition">
-                    <div>
-                        <div class="font-semibold text-slate-800 text-sm">
-                            <i class="fa-regular fa-calendar-check text-amber-500 mr-1.5"></i>
-                            วันที่: ${r.date} | ผู้บันทึก: ${r.inspector}
-                        </div>
-                        <div class="text-xs text-slate-400 mt-1">
-                            บันทึกเมื่อ: ${r.timestamp || '-'}
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-2 w-full sm:w-auto">
-                        <button onclick="editRecord('${r.id}')" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg text-xs font-semibold transition">
-                            <i class="fa-solid fa-pen-to-square mr-1"></i> ดู/แก้ไข
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function editRecord(recordId) {
-            const records = JSON.parse(localStorage.getItem('rawmat_records') || '[]');
-            const rec = records.find(r => r.id === recordId);
-            if (!rec) return;
-
-            currentRecordId = rec.id;
-            document.getElementById('doc-date').value = rec.date;
-            document.getElementById('inspector-name').value = rec.inspector;
-
-            rec.items.forEach(item => {
-                const bagsInput = document.getElementById(`bags-${item.id}`);
-                const remInput = document.getElementById(`remnant-${item.id}`);
-                const ohInput = document.getElementById(`oh-${item.id}`);
-
-                if (bagsInput) bagsInput.value = item.bags;
-                if (remInput) remInput.value = item.remnant;
-                if (ohInput) ohInput.value = item.oh;
-
-                calculateRow(item.id);
-            });
-
-            switchTab('calculator');
-            showToast('ดึงข้อมูลรายการเก่าเรียบร้อยแล้ว');
-        }
-    </script>
+      closeHistoryModal();
+      showToast(`โหลดรายการวันที่ ${items[0].AuditDate} มาแก้ไขเรียบร้อยแล้ว`);
+    }
+  </script>
 </body>
 </html>
