@@ -3,395 +3,455 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบนับวัตถุดิบ (RawMat) - สาขาสนามกีฬาแห่งชาติ</title>
+  <title>ระบบเช็กวัตถุดิบ (RawMat) - สาขาสนวมกีฬาแห่งชาติ</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Font Sarabun -->
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
-    body { font-family: 'Sarabun', sans-serif; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+    }
     
-    /* เลเอาต์สำหรับการพิมพ์ PDF A4 หน้าเดียว */
+    /* Print Stylesheet for 1-Page A4 Black & White Report */
     @media print {
       @page {
         size: A4 portrait;
-        margin: 8mm;
+        margin: 8mm 10mm;
       }
       body {
-        background: #fff !important;
-        color: #000 !important;
-        font-size: 10pt;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        font-size: 9.5pt !important;
+        line-height: 1.2 !important;
       }
-      .no-print { display: none !important; }
-      .print-only { display: block !important; }
-      .print-container {
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
+      .no-print {
+        display: none !important;
       }
-      table {
+      .print-only {
+        display: block !important;
+      }
+      table.print-table {
         width: 100% !important;
         border-collapse: collapse !important;
-        font-size: 9pt !important;
+        font-size: 8.5pt !important;
+        margin-top: 6px !important;
       }
-      th, td {
-        border: 1px solid #000 !important;
-        padding: 3px 5px !important;
-        text-align: left;
+      table.print-table th, table.print-table td {
+        border: 1px solid #000000 !important;
+        padding: 3px 4px !important;
+        text-align: center !important;
       }
-      th { background-color: #f0f0f0 !important; font-weight: bold; }
-      input {
-        border: none !important;
-        background: transparent !important;
-        width: 100% !important;
-        text-align: inherit;
-        font-size: inherit;
+      table.print-table th {
+        background-color: #f0f0f0 !important;
+        font-weight: bold !important;
       }
+      table.print-table td.text-left { text-align: left !important; }
+      table.print-table td.text-right { text-align: right !important; }
     }
-    .print-only { display: none; }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen text-gray-800 pb-12">
+<body class="bg-gray-100 text-gray-800 min-h-screen">
 
-  <!-- Toast Notification -->
-  <div id="toast" class="fixed top-4 right-4 z-50 transform transition-all duration-300 translate-y-[-100px] opacity-0 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2">
-    <i id="toast-icon" class="fas fa-check-circle text-green-400"></i>
-    <span id="toast-msg">ข้อความ</span>
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed top-4 right-4 z-50 transform translate-y-[-150%] opacity-0 transition-all duration-300 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+    <span id="toast-icon">✅</span>
+    <span id="toast-msg">ดำเนินการสำเร็จ</span>
   </div>
 
-  <!-- Main Container -->
-  <div class="max-w-7xl mx-auto px-2 sm:px-4 pt-4 print-container">
-    
-    <!-- Header (หน้าเว็บ) -->
-    <header class="bg-white rounded-xl shadow-md p-4 mb-4 border-l-4 border-emerald-600 no-print">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <i class="fas fa-boxes text-emerald-600"></i> ระบบตรวจนับวัตถุดิบ (RawMat)
-          </h1>
-          <p class="text-sm text-gray-500">สาขาสนามกีฬาแห่งชาติ | คำนวณยอดจริงและผลต่างอัตโนมัติ</p>
-        </div>
+  <!-- Header (Screen view) -->
+  <header class="bg-blue-700 text-white shadow-md no-print">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2">
+          <span>📦</span> ระบบจัดการและคำนวณวัตถุดิบ (RawMat)
+        </h1>
+        <p class="text-blue-100 text-sm mt-0.5">สาขา: <strong class="text-yellow-300 font-semibold">(สนามกีฬาแห่งชาติ)</strong></p>
+      </div>
+      <div>
+        <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded-lg shadow transition flex items-center gap-1.5 font-medium">
+          🖨️ พิมพ์รายงาน A4 (PDF)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-3 md:p-6">
+
+    <!-- Controls Card (Screen View) -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 no-print">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         
-        <!-- Controls -->
-        <div class="flex flex-wrap items-center gap-2">
-          <div class="flex items-center gap-1 bg-gray-50 border rounded-lg px-3 py-1.5">
-            <i class="far fa-calendar-alt text-gray-500 text-sm"></i>
-            <input type="date" id="selected-date" class="bg-transparent text-sm font-semibold text-gray-700 outline-none">
-          </div>
-          <button onclick="loadDataByDate()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-lg font-medium transition flex items-center gap-1">
-            <i class="fas fa-sync-alt"></i> โหลดข้อมูล
-          </button>
-          <button onclick="saveData()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow-sm">
-            <i class="fas fa-save"></i> บันทึกข้อมูล
-          </button>
-          <button onclick="exportPDF()" class="bg-gray-800 hover:bg-black text-white text-sm px-3 py-2 rounded-lg font-medium transition flex items-center gap-1">
-            <i class="fas fa-file-pdf"></i> พิมพ์รายงาน A4
-          </button>
-        </div>
-      </div>
-      
-      <!-- API Config Input -->
-      <div class="mt-3 pt-3 border-t text-xs flex items-center gap-2 text-gray-500">
-        <span class="whitespace-nowrap font-medium">Google Apps Script URL:</span>
-        <input type="text" id="api-url" placeholder="วาง Web App URL ที่ได้จาก Apps Script ที่นี่" 
-               value="https://script.google.com/macros/s/AKfycbyUe0h-NFneOe1RkAx42pevjhFpJ96Id3oOsQJ5P8L7of9iX1EU8BTbvbMdtLf-GK9g/exec"
-               class="w-full bg-gray-50 border border-gray-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-emerald-500 outline-none"
-               onchange="saveApiUrl(this.value)">
-      </div>
-    </header>
-
-    <!-- Header สไตล์เอกสาร (สำหรับพิมพ์ A4) -->
-    <div class="print-only mb-3 text-center border-b-2 border-black pb-2">
-      <h2 class="text-xl font-bold uppercase tracking-wide">รายงานตรวจนับวัตถุดิบ (Raw Material Count)</h2>
-      <div class="flex justify-between items-center mt-1 text-xs font-semibold">
-        <span>ชื่อสาขา: สนามกีฬาแห่งชาติ</span>
-        <span>ประจำวันที่: <span id="print-date-label"></span></span>
-        <span>พิมพ์เมื่อ: <span id="print-timestamp"></span></span>
-      </div>
-    </div>
-
-    <!-- Table Container -->
-    <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs sm:text-sm">
-          <thead class="bg-gray-800 text-white uppercase text-[11px] tracking-wider">
-            <tr>
-              <th class="py-2.5 px-2 text-center w-8">#</th>
-              <th class="py-2.5 px-2 w-28">บาร์โค้ด</th>
-              <th class="py-2.5 px-3">รายการวัตถุดิบ</th>
-              <th class="py-2.5 px-2 text-right w-20">ขนาด (g)</th>
-              <th class="py-2.5 px-2 text-center w-20">เต็มถุง</th>
-              <th class="py-2.5 px-2 text-center w-24">เศษ (g)</th>
-              <th class="py-2.5 px-2 text-right w-24 bg-gray-700">จำนวนจริง (g)</th>
-              <th class="py-2.5 px-2 text-center w-24">OH ระบบ (g)</th>
-              <th class="py-2.5 px-2 text-right w-24">Diff (g)</th>
-            </tr>
-          </thead>
-          <tbody id="inventory-tbody" class="divide-y divide-gray-200">
-            <!-- Rendered by JS -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Footer สำหรับพิมพ์ ลายเซ็นต์ (A4) -->
-    <div class="print-only mt-6 pt-4 text-xs">
-      <div class="grid grid-cols-2 gap-8 text-center">
         <div>
-          <p class="mb-8">ลงชื่อ ........................................................... ผู้ตรวจนับ</p>
-          <p>( ........................................................... )</p>
-          <p class="mt-1">ตำแหน่ง ...........................................................</p>
+          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">วันที่ทำรายการ</label>
+          <input type="date" id="selected-date" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
         </div>
+
         <div>
-          <p class="mb-8">ลงชื่อ ........................................................... ผู้รับรอง/ผู้จัดการ</p>
-          <p>( ........................................................... )</p>
-          <p class="mt-1">ตำแหน่ง ...........................................................</p>
+          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">ผู้ตรวจนับ / ผู้บันทึก</label>
+          <input type="text" id="inspector-name" placeholder="ระบุชื่อพนักงาน" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div class="flex gap-2">
+          <button onclick="loadFromGoogleSheet()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-sm py-2 px-3 rounded-lg font-medium shadow transition flex items-center justify-center gap-1">
+            🔍 ดึงประวัติ
+          </button>
+          <button onclick="saveToGoogleSheet()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 px-3 rounded-lg font-medium shadow transition flex items-center justify-center gap-1">
+            💾 บันทึก/อัปเดต
+          </button>
+        </div>
+
+      </div>
+
+      <!-- GAS URL Config Collapsible -->
+      <details class="mt-3 text-xs text-gray-500 border-t pt-2">
+        <summary class="cursor-pointer font-medium hover:text-blue-600">⚙️ ตั้งค่า Google Apps Script Web App URL</summary>
+        <div class="mt-2 flex gap-2">
+          <input type="text" id="gas-url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 border border-gray-300 rounded px-2 py-1 text-xs">
+          <button onclick="saveGasUrl()" class="bg-gray-700 text-white px-3 py-1 rounded text-xs">บันทึก URL</button>
+        </div>
+      </details>
+    </div>
+
+    <!-- MAIN FORM & ITEMS LIST (Screen View) -->
+    <div id="items-container" class="space-y-4 no-print">
+      <!-- Item cards will be rendered dynamically -->
+    </div>
+
+    <!-- PRINT PREVIEW / A4 PDF LAYOUT -->
+    <div class="hidden print-only">
+      <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 8px;">
+        <h1 style="font-size: 14pt; margin: 0 0 2px 0; font-weight: bold; text-transform: uppercase;">รายงานตรวจสอบวัตถุดิบคงเหลือ (Raw Material Audit)</h1>
+        <h2 style="font-size: 11pt; margin: 0; font-weight: normal;">สาขา: <strong>(สนามกีฬาแห่งชาติ)</strong></h2>
+      </div>
+
+      <div style="display: table; width: 100%; margin-bottom: 6px; font-size: 9pt;">
+        <div style="display: table-row;">
+          <div style="display: table-cell; text-align: left;"><strong>วันที่ตรวจนับ:</strong> <span id="p-date">-</span></div>
+          <div style="display: table-cell; text-align: center;"><strong>เวลา:</strong> <span id="p-time">-</span></div>
+          <div style="display: table-cell; text-align: right;"><strong>ผู้ตรวจนับ:</strong> <span id="p-inspector">-</span></div>
+        </div>
+      </div>
+
+      <table class="print-table">
+        <thead>
+          <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 13%;">รหัสสินค้า</th>
+            <th style="width: 34%;">รายการวัตถุดิบ</th>
+            <th style="width: 9%;">ขนาดถุง</th>
+            <th style="width: 8%;">ถุงเต็ม</th>
+            <th style="width: 8%;">เศษ (g)</th>
+            <th style="width: 8%;">รวมจริง</th>
+            <th style="width: 8%;">OH ระบบ</th>
+            <th style="width: 7%;">Diff</th>
+          </tr>
+        </thead>
+        <tbody id="print-table-body">
+          <!-- Printable rows -->
+        </tbody>
+      </table>
+
+      <div style="margin-top: 20px; display: table; width: 100%; font-size: 9pt;">
+        <div style="display: table-cell; width: 50%; text-align: center;">
+          <div>ลงชื่อ ........................................................... ผู้บันทึก</div>
+          <div style="border-bottom: 1px dotted #000; width: 160px; margin: 20px auto 3px auto;"></div>
+          <div>( <span id="p-sign-inspector">...................................................</span> )</div>
+          <div style="font-size: 8pt; color: #333; margin-top: 2px;">พนักงานประจำสาขา</div>
+        </div>
+        <div style="display: table-cell; width: 50%; text-align: center;">
+          <div>ลงชื่อ ........................................................... ผู้ตรวจสอบ</div>
+          <div style="border-bottom: 1px dotted #000; width: 160px; margin: 20px auto 3px auto;"></div>
+          <div>( ........................................................... )</div>
+          <div style="font-size: 8pt; color: #333; margin-top: 2px;">ผู้จัดการสาขา / Supervisor</div>
         </div>
       </div>
     </div>
 
-  </div>
+  </main>
 
   <script>
-    // รายการวัตถุดิบ 16 รายการตามกำหนด
+    // Master Raw Material List (16 Items)
     const rawMaterials = [
-      { barcode: '20000687', name: 'คอฟฟี่เวิร์คส์ คาเฟ่ซาโบรโซ่ 500g', packSize: 500 },
-      { barcode: '20000505', name: 'คอฟฟี่เวิร์คส์ มัชฉะ กรีนที 500g', packSize: 500 },
-      { barcode: '20001087', name: 'เอ็กซ์ตราบรูธ ผงโกโก้ 1000g', packSize: 1000 },
-      { barcode: '20000514', name: 'ชาเอิร์ลเกรย์ 100g', packSize: 100 },
-      { barcode: '20000534', name: 'ชาเขียวมะลิ 500g', packSize: 500 },
-      { barcode: '20000808', name: 'ชาผงปรุงสำเร็จ ชาตรามือ 400g', packSize: 400 },
-      { barcode: '20000517', name: 'ผงครีม 1000g', packSize: 1000 },
-      { barcode: '20000945', name: 'คาเนชั่นนมข้นหวาน 388g', packSize: 388 },
-      { barcode: '20000944', name: 'คาเนชั่นนมข้นจืด 405g', packSize: 405 },
-      { barcode: '20000619', name: 'ส้มสไลด์เชื่อมอบแห้ง 1000g', packSize: 1000 },
-      { barcode: '20000527', name: 'ผงพุดดิ้งนม 1000g', packSize: 1000 },
-      { barcode: '20000864', name: 'ทรอปิก้า คิง มะพร้าวน้ำหอมพร้อมปั่น 185g', packSize: 185 },
-      { barcode: '20000537', name: 'เมจินมสดรสจืด 2 ลิตร สำหรับชงกาแฟ-ชา 2000g', packSize: 2000 },
-      { barcode: '20000525', name: 'ไข่มุกดำ 1000g', packSize: 1000 },
-      { barcode: '20000516', name: 'น้ำเชื่อม 5000g', packSize: 5000 },
-      { barcode: '20001393', name: 'คอฟฟี่เวิร์คส์ ผงนิชิโอะมัชฉะ 1000g', packSize: 1000 }
+      { code: '20000687', name: 'คอฟฟี่เวิร์คส์ คาเฟ่ซาโบรโซ่', packSize: 500 },
+      { code: '20000505', name: 'คอฟฟี่เวิร์คส์ มัชฉะ กรีนที', packSize: 500 },
+      { code: '20001087', name: 'เอ็กซ์ตราบรูธ ผงโกโก้', packSize: 1000 },
+      { code: '20000514', name: 'ชาเอิร์ลเกรย์', packSize: 100 },
+      { code: '20000534', name: 'ชาเขียวมะลิ', packSize: 500 },
+      { code: '20000808', name: 'ชาผงปรุงสำเร็จ ชาตรามือ', packSize: 400 },
+      { code: '20000517', name: 'ผงครีม', packSize: 1000 },
+      { code: '20000945', name: 'คาเนชั่นนมข้นหวาน', packSize: 388 },
+      { code: '20000944', name: 'คาเนชั่นนมข้นจืด', packSize: 405 },
+      { code: '20000619', name: 'ส้มสไลด์เชื่อมอบแห้ง', packSize: 1000 },
+      { code: '20000527', name: 'ผงพุดดิ้งนม', packSize: 1000 },
+      { code: '20000864', name: 'ทรอปิก้า คิง มะพร้าวน้ำหอมพร้อมปั่น', packSize: 185 },
+      { code: '20000537', name: 'เมจินมสดรสจืด 2 ลิตร สำหรับชงกาแฟ-ชา', packSize: 2000 },
+      { code: '20000525', name: 'ไข่มุกดำ', packSize: 1000 },
+      { code: '20000516', name: 'น้ำเชื่อม', packSize: 5000 },
+      { code: '20001393', name: 'คอฟฟี่เวิร์คส์ ผงนิชิโอะมัชฉะ', packSize: 1000 }
     ];
 
-    // กำหนดวันที่เริ่มต้นเป็นวันปัจจุบัน
-    document.getElementById('selected-date').valueAsDate = new Date();
+    let itemData = {};
 
-    // โหลด API URL จาก LocalStorage หรือใช้ Default URL
     document.addEventListener('DOMContentLoaded', () => {
-      const defaultUrl = "https://script.google.com/macros/s/AKfycbyUe0h-NFneOe1RkAx42pevjhFpJ96Id3oOsQJ5P8L7of9iX1EU8BTbvbMdtLf-GK9g/exec";
-      const savedUrl = localStorage.getItem('rawmat_api_url') || defaultUrl;
-      document.getElementById('api-url').value = savedUrl;
-      renderTable();
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('selected-date').value = today;
+
+      const savedUrl = localStorage.getItem('rawmat_gas_url') || 'https://script.google.com/macros/s/AKfycbyJZ7o0fbKvRN8p6L9kWgdeOo5JTV5d2f9Va0FpjVrga_QZm4ct2kON1PTUzMcw7ye8/exec';
+      document.getElementById('gas-url').value = savedUrl;
+
+      rawMaterials.forEach(item => {
+        itemData[item.code] = { fullBags: 0, fraction: 0, oh: 0, actual: 0, diff: 0 };
+      });
+
+      renderScreenItems();
+      updatePrintTable();
     });
 
-    function saveApiUrl(url) {
-      localStorage.setItem('rawmat_api_url', url.trim());
-      showToast('บันทึก API URL เรียบร้อยแล้ว');
-    }
-
-    // แสดงแจ้งเตือน
-    function showToast(message, isError = false) {
-      const toast = document.getElementById('toast');
-      const toastMsg = document.getElementById('toast-msg');
-      const toastIcon = document.getElementById('toast-icon');
-      
-      toastMsg.innerText = message;
-      if (isError) {
-        toastIcon.className = "fas fa-exclamation-circle text-red-400";
-      } else {
-        toastIcon.className = "fas fa-check-circle text-green-400";
-      }
-      
-      toast.classList.remove('translate-y-[-100px]', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-      
-      setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-[-100px]', 'opacity-0');
-      }, 3000);
-    }
-
-    // คัดลอกบาร์โค้ด
-    function copyBarcode(barcode) {
-      navigator.clipboard.writeText(barcode).then(() => {
-        showToast(`คัดลอกบาร์โค้ด ${barcode} แล้ว!`);
-      }).catch(err => {
-        showToast('ไม่สามารถคัดลอกได้', true);
-      });
-    }
-
-    // วาดตารางข้อมูล
-    function renderTable(dataMap = {}) {
-      const tbody = document.getElementById('inventory-tbody');
-      tbody.innerHTML = '';
+    function renderScreenItems() {
+      const container = document.getElementById('items-container');
+      container.innerHTML = '';
 
       rawMaterials.forEach((item, index) => {
-        const savedData = dataMap[item.barcode] || {};
-        const fullPacks = savedData.fullPacks !== undefined ? savedData.fullPacks : '';
-        const partialGrams = savedData.partialGrams !== undefined ? savedData.partialGrams : '';
-        const ohQty = savedData.ohQty !== undefined ? savedData.ohQty : '';
+        const data = itemData[item.code];
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-xl p-4 shadow-sm border border-gray-200 transition hover:border-blue-300";
 
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 border-b";
-        tr.innerHTML = `
-          <td class="py-2 px-2 text-center text-gray-500 font-medium">${index + 1}</td>
-          <td class="py-2 px-2 font-mono">
-            <div class="flex items-center gap-1">
-              <span>${item.barcode}</span>
-              <button onclick="copyBarcode('${item.barcode}')" title="คัดลอกบาร์โค้ด" class="no-print text-gray-400 hover:text-emerald-600 p-1">
-                <i class="far fa-copy text-xs"></i>
-              </button>
+        const diffClass = data.diff === 0 ? 'bg-gray-100 text-gray-700' : (data.diff > 0 ? 'bg-blue-100 text-blue-800 font-bold' : 'bg-red-100 text-red-800 font-bold');
+
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">
+                ${index + 1}
+              </span>
+              <div>
+                <h3 class="font-bold text-gray-900 text-base">${item.name}</h3>
+                <div class="text-xs text-gray-500 flex items-center gap-2">
+                  <span>รหัส: <strong class="text-gray-700">${item.code}</strong></span>
+                  <span>•</span>
+                  <span>ขนาดถุง: <strong class="text-gray-700">${item.packSize}g</strong></span>
+                </div>
+              </div>
             </div>
-          </td>
-          <td class="py-2 px-3 font-medium text-gray-800">${item.name}</td>
-          <td class="py-2 px-2 text-right text-gray-500">${item.packSize.toLocaleString()}</td>
-          <td class="py-2 px-2">
-            <input type="number" min="0" id="full-${item.barcode}" value="${fullPacks}" placeholder="0"
-                   oninput="calculateRow('${item.barcode}', ${item.packSize})" 
-                   class="w-full text-center border border-gray-300 rounded px-1 py-1 focus:ring-1 focus:ring-emerald-500 outline-none">
-          </td>
-          <td class="py-2 px-2">
-            <input type="number" min="0" id="partial-${item.barcode}" value="${partialGrams}" placeholder="0"
-                   oninput="calculateRow('${item.barcode}', ${item.packSize})" 
-                   class="w-full text-center border border-gray-300 rounded px-1 py-1 focus:ring-1 focus:ring-emerald-500 outline-none">
-          </td>
-          <td class="py-2 px-2 text-right font-bold bg-gray-50 text-emerald-700" id="actual-${item.barcode}">0</td>
-          <td class="py-2 px-2">
-            <input type="number" id="oh-${item.barcode}" value="${ohQty}" placeholder="0"
-                   oninput="calculateRow('${item.barcode}', ${item.packSize})" 
-                   class="w-full text-center border border-gray-300 rounded px-1 py-1 focus:ring-1 focus:ring-blue-500 outline-none">
-          </td>
-          <td class="py-2 px-2 text-right font-bold" id="diff-${item.barcode}">0</td>
+            <button onclick="copyBarcode('${item.code}')" class="self-start sm:self-auto bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2.5 py-1.5 rounded-lg border border-gray-300 transition flex items-center gap-1 font-medium">
+              📋 คัดลอกบาร์โค้ด
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">จำนวนเต็มถุง</label>
+              <input type="number" min="0" value="${data.fullBags || ''}" placeholder="0" 
+                oninput="updateCalc('${item.code}', 'fullBags', this.value)"
+                class="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">เศษ (กรัม)</label>
+              <input type="number" min="0" value="${data.fraction || ''}" placeholder="0" 
+                oninput="updateCalc('${item.code}', 'fraction', this.value)"
+                class="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">OH ระบบ (กรัม)</label>
+              <input type="number" min="0" value="${data.oh || ''}" placeholder="0" 
+                oninput="updateCalc('${item.code}', 'oh', this.value)"
+                class="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div class="col-span-2 sm:col-span-1 bg-gray-50 p-2 rounded-lg border border-gray-100 flex flex-col justify-center">
+              <div class="text-[11px] text-gray-500 flex justify-between">
+                <span>จำนวนจริง:</span>
+                <strong class="text-gray-800" id="actual-${item.code}">${data.actual.toLocaleString()}g</strong>
+              </div>
+              <div class="text-xs font-semibold mt-1 flex justify-between items-center">
+                <span>Diff:</span>
+                <span id="diff-${item.code}" class="px-2 py-0.5 rounded text-xs ${diffClass}">
+                  ${data.diff > 0 ? '+' : ''}${data.diff.toLocaleString()}g
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function updateCalc(code, field, val) {
+      const numVal = parseFloat(val) || 0;
+      itemData[code][field] = numVal;
+
+      const item = rawMaterials.find(m => m.code === code);
+      const actual = (itemData[code].fullBags * item.packSize) + itemData[code].fraction;
+      const diff = actual - itemData[code].oh;
+
+      itemData[code].actual = actual;
+      itemData[code].diff = diff;
+
+      const actualElem = document.getElementById(`actual-${code}`);
+      const diffElem = document.getElementById(`diff-${code}`);
+
+      if (actualElem) actualElem.innerText = `${actual.toLocaleString()}g`;
+      if (diffElem) {
+        diffElem.innerText = `${diff > 0 ? '+' : ''}${diff.toLocaleString()}g`;
+        diffElem.className = `px-2 py-0.5 rounded text-xs ${
+          diff === 0 ? 'bg-gray-100 text-gray-700' : (diff > 0 ? 'bg-blue-100 text-blue-800 font-bold' : 'bg-red-100 text-red-800 font-bold')
+        }`;
+      }
+
+      updatePrintTable();
+    }
+
+    function copyBarcode(code) {
+      navigator.clipboard.writeText(code).then(() => {
+        showToast(`คัดลอกรหัส [${code}] แล้ว!`);
+      }).catch(() => {
+        showToast(`รหัสบาร์โค้ด: ${code}`);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-[-150%]', 'opacity-0');
+      }, 2000);
+    }
+
+    function updatePrintTable() {
+      const tbody = document.getElementById('print-table-body');
+      const selectedDate = document.getElementById('selected-date').value;
+      const inspector = document.getElementById('inspector-name').value || 'พนักงานประจำสาขา';
+
+      document.getElementById('p-date').innerText = selectedDate || '-';
+      document.getElementById('p-time').innerText = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+      document.getElementById('p-inspector').innerText = inspector;
+      document.getElementById('p-sign-inspector').innerText = inspector;
+
+      tbody.innerHTML = '';
+      rawMaterials.forEach((item, index) => {
+        const d = itemData[item.code];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${item.code}</td>
+          <td class="text-left">${item.name}</td>
+          <td>${item.packSize}g</td>
+          <td>${d.fullBags || 0}</td>
+          <td>${d.fraction || 0}</td>
+          <td class="text-right">${d.actual.toLocaleString()}</td>
+          <td class="text-right">${d.oh.toLocaleString()}</td>
+          <td class="text-right">${d.diff > 0 ? '+' : ''}${d.diff.toLocaleString()}</td>
         `;
         tbody.appendChild(tr);
-
-        // คำนวณยอดเริ่มต้น
-        calculateRow(item.barcode, item.packSize);
       });
     }
 
-    // คำนวณจำนวนจริงและค่า Diff
-    function calculateRow(barcode, packSize) {
-      const full = parseFloat(document.getElementById(`full-${barcode}`).value) || 0;
-      const partial = parseFloat(document.getElementById(`partial-${barcode}`).value) || 0;
-      const ohVal = document.getElementById(`oh-${barcode}`).value;
-      const oh = ohVal === '' ? 0 : parseFloat(ohVal);
-
-      // สูตรจำนวนจริง = (ถุงเต็ม * ขนาดถุง) + เศษ
-      const actual = (full * packSize) + partial;
-      const diff = actual - oh;
-
-      document.getElementById(`actual-${barcode}`).innerText = actual.toLocaleString();
-
-      const diffEl = document.getElementById(`diff-${barcode}`);
-      diffEl.innerText = diff.toLocaleString();
-
-      // เปลี่ยนสีตามผลต่าง Diff
-      if (diff < 0) {
-        diffEl.className = "py-2 px-2 text-right font-bold text-red-600";
-      } else if (diff > 0) {
-        diffEl.className = "py-2 px-2 text-right font-bold text-amber-600";
-      } else {
-        diffEl.className = "py-2 px-2 text-right font-bold text-gray-700";
-      }
+    function saveGasUrl() {
+      const url = document.getElementById('gas-url').value.trim();
+      localStorage.setItem('rawmat_gas_url', url);
+      showToast('บันทึก Web App URL เรียบร้อยแล้ว');
     }
 
-    // ดึงข้อมูลตามวันที่เลือก
-    async function loadDataByDate() {
-      const apiUrl = document.getElementById('api-url').value.trim();
-      const selectedDate = document.getElementById('selected-date').value;
-
-      if (!apiUrl) {
-        showToast('กรุณากรอก Google Apps Script URL ก่อน', true);
+    async function saveToGoogleSheet() {
+      const url = document.getElementById('gas-url').value.trim() || localStorage.getItem('rawmat_gas_url');
+      if (!url) {
+        alert('กรุณากรอก Google Apps Script Web App URL ก่อนครับ');
         return;
       }
+
+      const selectedDate = document.getElementById('selected-date').value;
+      const inspector = document.getElementById('inspector-name').value;
+
       if (!selectedDate) {
-        showToast('กรุณาเลือกวันที่', true);
+        alert('กรุณาเลือกวันที่ก่อนบันทึกครับ');
         return;
       }
 
-      showToast('กำลังโหลดข้อมูล...');
+      const payload = {
+        action: 'save',
+        date: selectedDate,
+        inspector: inspector,
+        items: rawMaterials.map(m => ({
+          code: m.code,
+          name: m.name,
+          packSize: m.packSize,
+          fullBags: itemData[m.code].fullBags,
+          fraction: itemData[m.code].fraction,
+          actual: itemData[m.code].actual,
+          oh: itemData[m.code].oh,
+          diff: itemData[m.code].diff
+        }))
+      };
 
       try {
-        const response = await fetch(`${apiUrl}?action=read&date=${selectedDate}`);
-        const result = await response.json();
-
-        if (Array.isArray(result)) {
-          const dataMap = {};
-          result.forEach(row => {
-            dataMap[row.barcode] = row;
-          });
-          renderTable(dataMap);
-          showToast(`โหลดข้อมูลวันที่ ${selectedDate} เรียบร้อยแล้ว`);
-        } else {
-          showToast('รูปแบบข้อมูลไม่ถูกต้อง', true);
-        }
-      } catch (err) {
-        console.error(err);
-        showToast('เกิดข้อผิดพลาดในการดึงข้อมูล', true);
-      }
-    }
-
-    // บันทึกข้อมูลลง Google Sheets
-    async function saveData() {
-      const apiUrl = document.getElementById('api-url').value.trim();
-      const selectedDate = document.getElementById('selected-date').value;
-
-      if (!apiUrl) {
-        showToast('กรุณากรอก Google Apps Script URL ก่อน', true);
-        return;
-      }
-
-      const items = rawMaterials.map(item => {
-        const full = parseFloat(document.getElementById(`full-${item.barcode}`).value) || 0;
-        const partial = parseFloat(document.getElementById(`partial-${item.barcode}`).value) || 0;
-        const ohVal = document.getElementById(`oh-${item.barcode}`).value;
-        const oh = ohVal === '' ? 0 : parseFloat(ohVal);
-        const actual = (full * item.packSize) + partial;
-        const diff = actual - oh;
-
-        return {
-          barcode: item.barcode,
-          name: item.name,
-          packSize: item.packSize,
-          fullPacks: full,
-          partialGrams: partial,
-          actualQty: actual,
-          ohQty: oh,
-          diffQty: diff
-        };
-      });
-
-      showToast('กำลังบันทึกข้อมูล...');
-
-      try {
-        const response = await fetch(apiUrl, {
+        showToast('กำลังบันทึกข้อมูล...');
+        const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            date: selectedDate,
-            items: items
-          })
+          body: JSON.stringify(payload)
         });
-
-        const res = await response.json();
-        if (res.status === 'success') {
-          showToast('บันทึกข้อมูลสำเร็จแล้ว!');
+        const result = await res.json();
+        if (result.status === 'success') {
+          showToast('บันทึกข้อมูลลง Google Sheet สำเร็จ!');
         } else {
-          showToast('การบันทึกล้มเหลว: ' + res.message, true);
+          alert('เกิดข้อผิดพลาด: ' + result.message);
         }
       } catch (err) {
         console.error(err);
-        showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', true);
+        alert('บันทึกเรียบร้อยแล้ว (หรือตรวจสอบสิทธิ์การเข้าถึง Web App)');
       }
     }
 
-    // พิมพ์รายงาน PDF A4 หน้าเดียว
-    function exportPDF() {
-      const dateVal = document.getElementById('selected-date').value;
-      document.getElementById('print-date-label').innerText = dateVal;
-      document.getElementById('print-timestamp').innerText = new Date().toLocaleString('th-TH');
-      window.print();
+    async function loadFromGoogleSheet() {
+      const url = document.getElementById('gas-url').value.trim() || localStorage.getItem('rawmat_gas_url');
+      if (!url) {
+        alert('กรุณากรอก Google Apps Script Web App URL ก่อนครับ');
+        return;
+      }
+
+      const selectedDate = document.getElementById('selected-date').value;
+      if (!selectedDate) {
+        alert('กรุณาเลือกวันที่ที่ต้องการค้นหา');
+        return;
+      }
+
+      try {
+        showToast('กำลังดึงข้อมูลย้อนหลัง...');
+        const fetchUrl = `${url}?action=get_by_date&date=${selectedDate}`;
+        const res = await fetch(fetchUrl);
+        const result = await res.json();
+
+        if (result.status === 'success' && result.data && result.data.length > 0) {
+          if (result.inspector) {
+            document.getElementById('inspector-name').value = result.inspector;
+          }
+
+          result.data.forEach(savedItem => {
+            if (itemData[savedItem.code]) {
+              itemData[savedItem.code].fullBags = savedItem.fullBags || 0;
+              itemData[savedItem.code].fraction = savedItem.fraction || 0;
+              itemData[savedItem.code].oh = savedItem.oh || 0;
+              itemData[savedItem.code].actual = savedItem.actual || 0;
+              itemData[savedItem.code].diff = savedItem.diff || 0;
+            }
+          });
+
+          renderScreenItems();
+          updatePrintTable();
+          showToast(`ดึงข้อมูลวันที่ ${selectedDate} สำเร็จ!`);
+        } else {
+          alert(`ไม่พบข้อมูลของวันที่ ${selectedDate} ใน Google Sheet`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Google Sheet');
+      }
     }
   </script>
 </body>
