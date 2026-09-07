@@ -3,425 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบนับวัตถุดิบ - สาขา สนามกีฬาแห่งชาติ</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <title>ระบบเชื่อมต่อ Google Sheets</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
-    body { font-family: 'Sarabun', sans-serif; }
-    
-    /* สไตล์สำหรับการพิมพ์ PDF ขนาด A4 1 หน้า (ขาวดำ) */
-    @media print {
-      body {
-        background-color: #fff !important;
-        color: #000 !important;
-        font-size: 10pt;
-        margin: 0;
-        padding: 0;
-      }
-      .no-print { display: none !important; }
-      .print-only { display: block !important; }
-      @page {
-        size: A4 portrait;
-        margin: 8mm 10mm;
-      }
-      .print-container {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-      }
-      table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        margin-top: 8px !important;
-      }
-      th, td {
-        border: 1px solid #000 !important;
-        padding: 3px 5px !important;
-        font-size: 9pt !important;
-        color: #000 !important;
-        text-align: center;
-      }
-      th {
-        background-color: #f0f0f0 !important;
-        font-weight: bold;
-      }
-      .text-left-print { text-align: left !important; }
-      .diff-negative { font-weight: bold; text-decoration: underline; }
-    }
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { padding: 10px 15px; background-color: #28a745; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #218838; }
   </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 pb-12">
+<body>
 
-  <!-- Notification Toast -->
-  <div id="toast" class="fixed bottom-4 right-4 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center space-x-2">
-    <i class="fa-solid fa-circle-check"></i>
-    <span id="toast-msg">คัดลอกรหัสเรียบร้อย</span>
+  <h2>ฝากข้อมูลลง Google Sheets</h2>
+
+  <div class="form-group">
+    <label for="scriptUrl">Google Apps Script URL:</label>
+    <!-- นำ URL ของคุณใส่ไว้ใน value พร้อมใช้งานทันที -->
+    <input 
+      type="text" 
+      id="scriptUrl" 
+      value="https://script.google.com/macros/s/AKfycbyUe0h-NFneOe1RkAx42pevjhFpJ96Id3oOsQJ5P8L7of9iX1EU8BTbvbMdtLf-GK9g/exec" 
+      readonly
+    />
   </div>
 
-  <!-- Main Container -->
-  <div class="max-w-6xl mx-auto px-3 py-4 sm:px-6 sm:py-6 print-container">
-    
-    <!-- Top Bar / Header -->
-    <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4 border border-slate-200">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded-full no-print">Raw Material System</span>
-            <span class="text-xs text-slate-500 font-medium">สาขา สนามกีฬาแห่งชาติ</span>
-          </div>
-          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">รายงานการตรวจนับวัตถุดิบและค่า Diff</h1>
-          <p class="text-xs sm:text-sm text-slate-500 print-only">สาขา: สนามกีฬาแห่งชาติ | วันที่ตรวจนับ: <span id="print-date-display"></span></p>
-        </div>
-
-        <!-- Action Controls -->
-        <div class="flex flex-wrap items-center gap-2 no-print">
-          <div>
-            <label class="block text-xs text-slate-500 mb-1">วันที่ตรวจนับ</label>
-            <input type="date" id="auditDate" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-          </div>
-          <div class="flex items-end gap-2 mt-auto">
-            <button onclick="openHistoryModal()" class="bg-slate-800 hover:bg-slate-900 text-white px-3.5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
-              <i class="fa-solid fa-clock-rotate-left"></i> ประวัติ
-            </button>
-            <button onclick="exportPDF()" class="bg-amber-600 hover:bg-amber-700 text-white px-3.5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
-              <i class="fa-solid fa-file-pdf"></i> พิมพ์ / PDF A4
-            </button>
-            <button onclick="saveData()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
-              <i class="fa-solid fa-floppy-disk"></i> บันทึก
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Raw Material Form Table -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-slate-800 text-white text-xs sm:text-sm">
-              <th class="py-3 px-3 text-center w-12">ลำดับ</th>
-              <th class="py-3 px-3 text-center w-28">บาร์โค้ด</th>
-              <th class="py-3 px-3 min-w-[200px] text-left-print">ชื่อวัตถุดิบ</th>
-              <th class="py-3 px-3 text-center w-20">นับถุงจริง</th>
-              <th class="py-3 px-3 text-center w-20">เศษจริง</th>
-              <th class="py-3 px-3 text-center w-24 bg-slate-700">ค่ารวมจริง</th>
-              <th class="py-3 px-3 text-center w-24">OH</th>
-              <th class="py-3 px-3 text-center w-24 bg-slate-700">Diff</th>
-            </tr>
-          </thead>
-          <tbody id="materialTableBody" class="divide-y divide-slate-200 text-xs sm:text-sm">
-            <!-- Dynamic Content Generated via JS -->
-          </tbody>
-        </table>
-      </div>
-    </div>
+  <div class="form-group">
+    <label for="dataInput">ข้อมูลที่ต้องการส่ง:</label>
+    <input type="text" id="dataInput" placeholder="กรอกข้อความที่นี่...">
   </div>
 
-  <!-- History Modal -->
-  <div id="historyModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
-    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="p-4 sm:p-5 border-b border-slate-200 flex justify-between items-center bg-slate-900 text-white">
-        <h3 class="font-bold text-lg flex items-center gap-2">
-          <i class="fa-solid fa-box-archive"></i> ประวัติการตรวจนับย้อนหลัง
-        </h3>
-        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
-      </div>
-      
-      <!-- Filter Controls -->
-      <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap gap-3 items-center">
-        <div>
-          <label class="text-xs text-slate-500 block mb-1">เลือกเดือน / ปี</label>
-          <input type="month" id="historyMonthFilter" onchange="filterHistory()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-500">
-        </div>
-        <button onclick="loadHistoryData()" class="mt-auto bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium transition">
-          <i class="fa-solid fa-arrows-rotate"></i> รีเฟรช
-        </button>
-      </div>
+  <button onclick="sendData()">ส่งข้อมูล</button>
 
-      <!-- History List Container -->
-      <div id="historyList" class="p-4 overflow-y-auto space-y-3 flex-1">
-        <p class="text-center text-slate-400 py-8">กำลังโหลดข้อมูลประวัติ...</p>
-      </div>
-    </div>
-  </div>
+  <p id="status"></p>
 
   <script>
-    // ----------------------------------------------------
-    // URL ของ Google Apps Script Web App
-    // ----------------------------------------------------
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1jFjyf7aQzY7E8Z88JXZwDvjfaCTaVBQlzYweJDpNfnAxJD6tL3GD_aJC5fqXWxpZ/exec";
+    // ดึง URL มาใช้งานใน JavaScript
+    const SCRIPT_URL = document.getElementById('scriptUrl').value;
 
-    // รายการวัตถุดิบทั้ง 16 รายการ
-    const RAW_MATERIALS = [
-      { code: '20000687', name: 'คอฟฟี่เวิร์คส์ คาเฟ่ซาโบรโซ่ 500g' },
-      { code: '20000505', name: 'คอฟฟี่เวิร์คส์ มัชฉะ กรีนที 500g' },
-      { code: '20001087', name: 'เอ็กซ์ตราบรูธ ผงโกโก้ 1000g' },
-      { code: '20000514', name: 'ชาเอิร์ลเกรย์ 100g' },
-      { code: '20000534', name: 'ชาเขียวมะลิ 500g' },
-      { code: '20000808', name: 'ชาผงปรุงสำเร็จ ชาตรามือ 400g' },
-      { code: '20000517', name: 'ผงครีม 1000g' },
-      { code: '20000945', name: 'คาเนชั่นนมข้นหวาน 388g' },
-      { code: '20000944', name: 'คาเนชั่นนมข้นจืด 405g' },
-      { code: '20000619', name: 'ส้มสไลด์เชื่อมอบแห้ง 1000g' },
-      { code: '20000527', name: 'ผงพุดดิ้งนม 1000g' },
-      { code: '20000864', name: 'ทรอปิก้า คิง มะพร้าวน้ำหอมพร้อมปั่น 185g' },
-      { code: '20000537', name: 'เมจินมสดรสจืด 2 ลิตร สำหรับชงกาแฟ-ชา 2000g' },
-      { code: '20000525', name: 'ไข่มุกดำ 1000g' },
-      { code: '20000516', name: 'น้ำเชื่อม 5000g' },
-      { code: '20001393', name: 'คอฟฟี่เวิร์คส์ ผงนิชิโอะมัชฉะ 1000g' }
-    ];
+    function sendData() {
+      const inputVal = document.getElementById('dataInput').value;
+      const statusText = document.getElementById('status');
 
-    let currentEditingRecordId = null;
-    let historyRawData = [];
-
-    // Initialize Page
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('auditDate').valueAsDate = new Date();
-      renderTable();
-    });
-
-    // Render Raw Material Table
-    function renderTable() {
-      const tbody = document.getElementById('materialTableBody');
-      tbody.innerHTML = '';
-
-      RAW_MATERIALS.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
-        tr.innerHTML = `
-          <td class="py-2 px-3 text-center font-medium text-slate-400">${index + 1}</td>
-          <td class="py-2 px-3 text-center">
-            <div class="flex items-center justify-center gap-1">
-              <span class="font-mono font-semibold text-slate-700">${item.code}</span>
-              <button onclick="copyBarcode('${item.code}')" class="no-print text-slate-400 hover:text-emerald-600 p-1" title="คัดลอกรหัส">
-                <i class="fa-regular fa-copy"></i>
-              </button>
-            </div>
-          </td>
-          <td class="py-2 px-3 font-medium text-slate-800 text-left-print">${item.name}</td>
-          <td class="py-2 px-2 text-center">
-            <input type="number" step="any" id="full_${item.code}" value="" oninput="calculateDiff('${item.code}')"
-              class="w-full text-center border border-slate-300 rounded px-1.5 py-1 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-          </td>
-          <td class="py-2 px-2 text-center">
-            <input type="number" step="any" id="frac_${item.code}" value="" oninput="calculateDiff('${item.code}')"
-              class="w-full text-center border border-slate-300 rounded px-1.5 py-1 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-          </td>
-          <td class="py-2 px-3 text-center font-bold text-slate-900 bg-slate-100/70" id="total_${item.code}">0</td>
-          <td class="py-2 px-2 text-center">
-            <input type="number" step="any" id="oh_${item.code}" value="" oninput="calculateDiff('${item.code}')"
-              class="w-full text-center border border-slate-300 rounded px-1.5 py-1 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-          </td>
-          <td class="py-2 px-3 text-center font-bold bg-slate-100/70" id="diff_${item.code}">0</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    // คำนวณค่ารวมจริง และ ค่า Diff
-    function calculateDiff(code) {
-      const full = parseFloat(document.getElementById(`full_${code}`).value) || 0;
-      const frac = parseFloat(document.getElementById(`frac_${code}`).value) || 0;
-      const oh = parseFloat(document.getElementById(`oh_${code}`).value) || 0;
-
-      const totalActual = full + frac;
-      const diff = totalActual - oh;
-
-      // แสดงผลค่ารวมจริง
-      document.getElementById(`total_${code}`).innerText = Number.isInteger(totalActual) ? totalActual : totalActual.toFixed(2);
-
-      // แสดงผล Diff
-      const diffEl = document.getElementById(`diff_${code}`);
-      const formattedDiff = Number.isInteger(diff) ? diff : diff.toFixed(2);
-      diffEl.innerText = formattedDiff;
-
-      // เปลี่ยนสีข้อความกรณีมีค่า Diff
-      if (diff < 0) {
-        diffEl.className = "py-2 px-3 text-center font-bold bg-slate-100/70 text-rose-600 diff-negative";
-      } else if (diff > 0) {
-        diffEl.className = "py-2 px-3 text-center font-bold bg-slate-100/70 text-amber-600";
-      } else {
-        diffEl.className = "py-2 px-3 text-center font-bold bg-slate-100/70 text-emerald-600";
-      }
-    }
-
-    // คัดลอกรหัสบาร์โค้ด
-    function copyBarcode(code) {
-      navigator.clipboard.writeText(code).then(() => {
-        showToast(`คัดลอกรหัส ${code} เรียบร้อยแล้ว`);
-      });
-    }
-
-    // แสดงแจ้งเตือน
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toast-msg').innerText = msg;
-      toast.classList.remove('translate-y-20', 'opacity-0');
-      setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 2500);
-    }
-
-    // พิมพ์เอกสาร PDF A4
-    function exportPDF() {
-      const dateVal = document.getElementById('auditDate').value;
-      document.getElementById('print-date-display').innerText = dateVal || 'ไม่ระบุ';
-      window.print();
-    }
-
-    // บันทึกข้อมูลไปยัง Google Sheets
-    async function saveData() {
-      const auditDate = document.getElementById('auditDate').value;
-      if (!auditDate) {
-        alert('กรุณาเลือกวันที่ตรวจนับ');
+      if (!inputVal) {
+        alert('กรุณากรอกข้อมูลก่อนส่ง');
         return;
       }
 
-      const yearMonth = auditDate.substring(0, 7); // YYYY-MM
-      const itemsPayload = RAW_MATERIALS.map(item => {
-        const full = parseFloat(document.getElementById(`full_${item.code}`).value) || 0;
-        const frac = parseFloat(document.getElementById(`frac_${item.code}`).value) || 0;
-        const oh = parseFloat(document.getElementById(`oh_${item.code}`).value) || 0;
-        const totalActual = full + frac;
-        const diff = totalActual - oh;
+      statusText.innerText = 'กำลังส่งข้อมูล...';
 
-        return {
-          code: item.code,
-          name: item.name,
-          fullCount: full,
-          fractionCount: frac,
-          totalActual: totalActual,
-          oh: oh,
-          diff: diff
-        };
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors', // ป้องกันติด CORS เมื่อเรียกข้ามโดเมน
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: inputVal })
+      })
+      .then(() => {
+        statusText.innerText = 'ส่งข้อมูลสำเร็จเรียบร้อย!';
+        document.getElementById('dataInput').value = '';
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        statusText.innerText = 'เกิดข้อผิดพลาดในการส่งข้อมูล';
       });
-
-      const payload = {
-        action: currentEditingRecordId ? 'update' : 'save',
-        recordId: currentEditingRecordId,
-        auditDate: auditDate,
-        yearMonth: yearMonth,
-        items: itemsPayload
-      };
-
-      try {
-        showToast('กำลังบันทึกข้อมูลไปยัง Google Sheets...');
-        const response = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        const res = await response.json();
-        if (res.status === 'success') {
-          showToast('บันทึกข้อมูลสำเร็จเรียบร้อย!');
-          currentEditingRecordId = null;
-        } else {
-          alert('เกิดข้อผิดพลาดในการบันทึก: ' + res.message);
-        }
-      } catch (err) {
-        console.error(err);
-        alert('ไม่สามารถเชื่อมต่อระบบบันทึกได้ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตหรือ URL ของ Apps Script');
-      }
-    }
-
-    // Modal ประวัติย้อนหลัง
-    function openHistoryModal() {
-      document.getElementById('historyModal').classList.remove('hidden');
-      loadHistoryData();
-    }
-
-    function closeHistoryModal() {
-      document.getElementById('historyModal').classList.add('hidden');
-    }
-
-    // ดึงข้อมูลประวัติย้อนหลัง
-    async function loadHistoryData() {
-      const listEl = document.getElementById('historyList');
-      listEl.innerHTML = '<p class="text-center text-slate-400 py-8"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูลประวัติ...</p>';
-
-      try {
-        const res = await fetch(SCRIPT_URL);
-        const data = await res.json();
-        historyRawData = data;
-        filterHistory();
-      } catch (err) {
-        listEl.innerHTML = '<p class="text-center text-rose-500 py-8">เกิดข้อผิดพลาดในการโหลดประวัติ</p>';
-      }
-    }
-
-    // จัดกลุ่มประวัติย้อนหลังตามเดือน/ปี และวันที่
-    function filterHistory() {
-      const listEl = document.getElementById('historyList');
-      const selectedMonth = document.getElementById('historyMonthFilter').value; // YYYY-MM
-
-      let filtered = historyRawData;
-      if (selectedMonth) {
-        filtered = historyRawData.filter(row => row.YearMonth === selectedMonth);
-      }
-
-      if (filtered.length === 0) {
-        listEl.innerHTML = '<p class="text-center text-slate-400 py-8">ไม่พบประวัติการตรวจนับในช่วงเวลาที่เลือก</p>';
-        return;
-      }
-
-      // Group by RecordID
-      const grouped = {};
-      filtered.forEach(row => {
-        if (!grouped[row.RecordID]) {
-          grouped[row.RecordID] = {
-            recordId: row.RecordID,
-            auditDate: row.AuditDate,
-            timestamp: row.Timestamp,
-            yearMonth: row.YearMonth,
-            items: []
-          };
-        }
-        grouped[row.RecordID].items.push(row);
-      });
-
-      listEl.innerHTML = '';
-      Object.values(grouped).forEach(rec => {
-        const card = document.createElement('div');
-        card.className = 'border border-slate-200 rounded-xl p-4 hover:border-emerald-500 transition bg-white shadow-sm flex justify-between items-center';
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-slate-800 text-sm">วันที่บันทึก: ${rec.auditDate}</span>
-              <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">${rec.yearMonth}</span>
-            </div>
-            <p class="text-xs text-slate-400 mt-1">เวลาบันทึก: ${rec.timestamp} | จำนวน ${rec.items.length} รายการ</p>
-          </div>
-          <button onclick="loadRecordToForm('${rec.recordId}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1">
-            <i class="fa-solid fa-pen-to-square"></i> โหลดมาแก้ไข
-          </button>
-        `;
-        listEl.appendChild(card);
-      });
-    }
-
-    // ดึงรายการประวัติที่เลือกกลับมาแก้ไขในฟอร์ม
-    function loadRecordToForm(recordId) {
-      const items = historyRawData.filter(row => row.RecordID === recordId);
-      if (items.length === 0) return;
-
-      currentEditingRecordId = recordId;
-      document.getElementById('auditDate').value = items[0].AuditDate;
-
-      items.forEach(item => {
-        const code = item.ItemCode;
-        if (document.getElementById(`full_${code}`)) {
-          document.getElementById(`full_${code}`).value = item.FullCount;
-          document.getElementById(`frac_${code}`).value = item.FractionCount;
-          document.getElementById(`oh_${code}`).value = item.OH;
-          calculateDiff(code);
-        }
-      });
-
-      closeHistoryModal();
-      showToast(`โหลดรายการวันที่ ${items[0].AuditDate} มาแก้ไขเรียบร้อยแล้ว`);
     }
   </script>
+
 </body>
 </html>
