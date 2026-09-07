@@ -103,12 +103,12 @@
 
       </div>
 
-      <!-- GAS URL Config Collapsible -->
+      <!-- GAS URL Config Collapsible (Protected with Password) -->
       <details class="mt-3 text-xs text-gray-500 border-t pt-2">
-        <summary class="cursor-pointer font-medium hover:text-blue-600">⚙️ ตั้งค่า Google Apps Script Web App URL</summary>
+        <summary class="cursor-pointer font-medium hover:text-blue-600">⚙️ ตั้งค่า Google Apps Script Web App URL (🔒 ล็อกรหัสผ่าน)</summary>
         <div class="mt-2 flex gap-2">
           <input type="text" id="gas-url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 border border-gray-300 rounded px-2 py-1 text-xs">
-          <button onclick="saveGasUrl()" class="bg-gray-700 text-white px-3 py-1 rounded text-xs">บันทึก URL</button>
+          <button onclick="saveGasUrl()" class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded text-xs transition">🔒 บันทึก URL</button>
         </div>
       </details>
     </div>
@@ -197,7 +197,7 @@
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('selected-date').value = today;
 
-      const savedUrl = localStorage.getItem('rawmat_gas_url') || 'https://script.google.com/macros/s/AKfycbyJZ7o0fbKvRN8p6L9kWgdeOo5JTV5d2f9Va0FpjVrga_QZm4ct2kON1PTUzMcw7ye8/exec';
+      const savedUrl = localStorage.getItem('rawmat_gas_url') || 'https://script.google.com/macros/s/AKfycby1jFjyf7aQzY7E8Z88JXZwDvjfaCTaVBQlzYweJDpNfnAxJD6tL3GD_aJC5fqXWxpZ/exec';
       document.getElementById('gas-url').value = savedUrl;
 
       rawMaterials.forEach(item => {
@@ -353,6 +353,15 @@
     }
 
     function saveGasUrl() {
+      // Prompt รหัสผ่านยืนยันสิทธิ์ก่อนแก้ไข URL
+      const pwd = prompt("🔒 กรุณากรอกรหัสผ่านเพื่อแก้ไข Web App URL:");
+      
+      // รหัสผ่านคือ 1234 (เปลี่ยนรหัสผ่านตรงนี้ได้)
+      if (pwd !== "1234") {
+        if (pwd !== null) alert("❌ รหัสผ่านไม่ถูกต้อง!");
+        return;
+      }
+
       const url = document.getElementById('gas-url').value.trim();
       localStorage.setItem('rawmat_gas_url', url);
       showToast('บันทึก Web App URL เรียบร้อยแล้ว');
